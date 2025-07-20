@@ -2,12 +2,11 @@ const express = require('express')
 const controller = require('../controllers/task-controller')
 const taskRoute = express.Router();
 
-taskRoute.get("/api/tasks", controller.getTaskList);
-taskRoute.get("/api/tasks/:id", controller.getTaskById);
-taskRoute.get("/api/tasks/section/:sectionId", controller.getTaskBySection);
-
-taskRoute.post("/api/tasks/create", controller.postTaskAdd);
-taskRoute.put("/api/tasks/update/:id", controller.putTaskUpdate);
-taskRoute.delete("/api/tasks/remove/:id", controller.deleteTaskRemove);
+taskRoute.get("/", controller.getTaskList);
+taskRoute.get("/:id", controller.getTaskById);
+taskRoute.get("/employee/:empId", controller.getTaskByEmployee);
+taskRoute.post("/", controller.postTaskAdd);
+taskRoute.put("/:id", controller.putTaskUpdate);
+taskRoute.delete("/:id", controller.deleteTaskById);
 
 module.exports = taskRoute

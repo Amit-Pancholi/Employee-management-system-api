@@ -2,14 +2,11 @@ const express = require("express");
 const controller = require("../controllers/section-controller");
 const sectionRoute = express.Router();
 
-sectionRoute.get("/api/sections", controller.getSectionList);
-sectionRoute.get("/api/sections/:id", controller.getSectionById);
-sectionRoute.get(
-  "/api/sections/department/:deptId",
-  controller.getSectionByDepartment
-);
-sectionRoute.post("/api/sections/create", controller.postSectionAdd);
-sectionRoute.put("/api/sections/update/:id", controller.putSectionUpdate);
-sectionRoute.delete("/api/sections/remove/:id", controller.deleteSectionRemove);
+sectionRoute.get("/", controller.getSectionList);
+sectionRoute.get("/:id", controller.getSectionById);
+sectionRoute.get("/department/:deptId", controller.getSectionByDepartment);
+sectionRoute.post("/", controller.postSectionAdd);
+sectionRoute.put("/:id", controller.putSectionUpdate);
+sectionRoute.delete("/:id", controller.deleteSectionById);
 
 module.exports = sectionRoute;

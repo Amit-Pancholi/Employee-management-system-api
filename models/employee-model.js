@@ -18,11 +18,11 @@ employeeSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    departmentId: {
+    department: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
     },
-    sectionId: {
+    section: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Section",
     },
