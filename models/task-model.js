@@ -6,14 +6,15 @@ taskSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    description: String,
     status: {
       type: String,
       enum: ["pending", "in progress", "completed"],
       default: "pending",
     },
-    sectionId: {
+    employee: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Section",
+      ref: "Employee",
     },
   },
   { timestamps: true }
