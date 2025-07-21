@@ -16,6 +16,10 @@ taskSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
     },
+    isDelete:{
+      type:Boolean,
+      default:false
+    }
   },
   { timestamps: true }
 );

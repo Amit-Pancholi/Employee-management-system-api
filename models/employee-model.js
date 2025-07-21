@@ -26,6 +26,10 @@ employeeSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Section",
     },
+    isDelete: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

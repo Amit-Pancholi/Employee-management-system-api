@@ -24,19 +24,20 @@ app.use((req, res, next) => {
 });
 
 // Connect to MongoDB
-mongoose
-  .connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("✅ MongoDB connected");
-    app.listen(PORT, () =>
-      console.log(
-        `🚀 Server started on port ${PORT}` + " " + `http://localhost:${PORT}`
-      )
-    );
-  })
-  .catch((err) => console.error("❌ MongoDB connection failed:", err));
+// mongoose
+//   .connect(MONGO_URI, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//   })
+//   .then(() => {
+//     console.log("✅ MongoDB connected");
+//     app.listen(PORT, () =>
+//       console.log(
+//         `🚀 Server started on port ${PORT}` + " " + `http://localhost:${PORT}`
+//       )
+//     );
+//   })
+//   .catch((err) => console.error("❌ MongoDB connection failed:", err));
 
 
+  module.exports = app;

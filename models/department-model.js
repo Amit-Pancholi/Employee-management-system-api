@@ -7,6 +7,10 @@ departmentSchema = mongoose.Schema(
       required: true,
     },
     description: String,
+    isDelete :{
+      type:Boolean,
+      default:false
+    }
   },
   { timestamps: true }
 );
