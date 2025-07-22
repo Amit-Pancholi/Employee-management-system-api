@@ -8,7 +8,7 @@ exports.getEmployeeList = async (req, res, next) => {
     const employee = await Employee.find({ isDelete: false })
       .populate("department", "name")
       .populate("section", "name");
-    res.status(200).json({employee});
+    res.status(200).json({ employee });
   } catch (error) {
     res.status(500).json({
       message: "Error fetching employees",
@@ -27,12 +27,12 @@ exports.getEmployeeById = async (req, res, next) => {
       .populate("department", "name")
       .populate("section", "name");
     if (!employee)
-      return res.status(404).json({ message: "Employee not found or removed" });
+      return res.status(404).json({ Message: "Employee not found or removed" });
 
-    res.status(200).json({employee});
+    res.status(200).json({ employee });
   } catch (error) {
     res.status(500).json({
-      message: "Error fetching employees",
+      Message: "Error fetching employees",
       error: error.message,
     });
   }
@@ -46,9 +46,10 @@ exports.getEmployeeByRole = async (req, res, next) => {
     })
       .populate("department", "name")
       .populate("section", "name");
-    if (employee.length === 0) return res.status(400).json({ Message: "Invalid Role" });
+    if (employee.length === 0)
+      return res.status(400).json({ Message: "Invalid Role" });
 
-    res.status(200).json({employee});
+    res.status(200).json({ employee });
   } catch (error) {
     res.status(500).json({
       message: "Error fetching employees",
@@ -67,7 +68,7 @@ exports.getEmployeeByDepartment = async (req, res, next) => {
       .populate("section", "name");
     if (employee.length === 0)
       return res.status(400).json({ Message: "Invalid Department" });
-    res.status(200).json({employee});
+    res.status(200).json({ employee });
   } catch (error) {
     res.status(500).json({
       message: "Error fetching employees",
@@ -86,8 +87,9 @@ exports.getEmployeeBySection = async (req, res, next) => {
       .populate("department", "name")
       .populate("section", "name");
 
-    if (employee.length === 0) return res.status(400).json({ Message: "Invalid section" });
-    res.status(200).json({employee});
+    if (employee.length === 0)
+      return res.status(400).json({ Message: "Invalid section" });
+    res.status(200).json({ employee });
   } catch (error) {
     res.status(500).json({
       message: "Error fetching employees",
@@ -128,6 +130,8 @@ exports.postEmployeeAdd = [
     .matches(/^[0-9]+$/)
     .withMessage("Please enter a valid phone number"),
   check("email")
+    .notEmpty()
+    .withMessage("Please enter email")
     .isEmail()
     .withMessage("Please enter a valid email")
     .normalizeEmail(),
@@ -149,7 +153,11 @@ exports.postEmployeeAdd = [
 
       const deptExist = await Department.findById(department);
       const secExist = await Section.findById(section);
+      const emailExist = await Employee.findOne({ email, isDelete: false });
+      const phoneExist = await Employee.findOne({ phone, isDelete: false });
 
+      if (emailExist) return res.status(409).json({ Message: "Email exist" });
+      if (phoneExist) return res.status(409).json({ Message: "Phone exist" });
       if (!deptExist)
         return res.status(400).json({ Message: "Invalid Department" });
       if (!secExist)
@@ -207,6 +215,8 @@ exports.putEmployeeUpdate = [
     .matches(/^[0-9]+$/)
     .withMessage("Please enter a valid phone number"),
   check("email")
+    .notEmpty()
+    .withMessage("Please enter email")
     .isEmail()
     .withMessage("Please enter a valid email")
     .normalizeEmail(),
@@ -227,6 +237,13 @@ exports.putEmployeeUpdate = [
       const employeeId = req.params.id;
       const employee = await Employee.findById(employeeId);
       const { name, role, phone, email, department, section } = req.body;
+
+      const emailExist = await Employee.findOne({ email, isDelete: false });
+      const phoneExist = await Employee.findOne({ phone, isDelete: false });
+
+      if (emailExist && employee.email != email) return res.status(409).json({ Message: "Email exist" });
+      if (phoneExist && employee.phone != phone) return res.status(409).json({ Message: "Phone exist" });
+
       if (!employee)
         return res.status(400).json({ Message: "Invalid Employee" });
 

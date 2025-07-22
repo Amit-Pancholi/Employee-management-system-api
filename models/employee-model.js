@@ -21,10 +21,12 @@ employeeSchema = mongoose.Schema(
     department: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
+      required: true,
     },
     section: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Section",
+      required: true,
     },
     isDelete: {
       type: Boolean,
