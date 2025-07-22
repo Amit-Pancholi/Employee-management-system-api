@@ -8,7 +8,7 @@ exports.getSectionList = async (req, res, next) => {
       "department",
       "name"
     );
-    res.status(200).json({section});
+    res.status(200).json({ section });
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching section",
@@ -23,9 +23,11 @@ exports.getSectionById = async (req, res, next) => {
       _id: sectionId,
       isDelete: false,
     }).populate("department", "name");
+
     if (!section)
       return res.status(404).json({ Message: "section not found or removed" });
-    res.status(200).json({section});
+
+    res.status(200).json({ section });
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching section",
@@ -35,16 +37,16 @@ exports.getSectionById = async (req, res, next) => {
 };
 exports.getSectionByDepartment = async (req, res, next) => {
   try {
-    const departmentId = req.params.id;
+    const departmentId = req.params.deptId;
+
     const section = await Section.find({
       department: departmentId,
       isDelete: false,
     }).populate("department", "name");
+
     if (section.length === 0)
-      return res
-        .status(400)
-        .json({ Message: "bad request : section not find" });
-    res.status(200).json({section});
+      return res.status(400).json({ Message: "Invalid department" });
+    res.status(200).json({ section });
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching section",
@@ -85,7 +87,11 @@ exports.postSectionAdd = [
       if (!deptExist)
         return res.status(400).json({ Message: "Invalid Department" });
 
-      const secExist = await Section.findOne({ name: name,isDelete:false });
+      const secExist = await Section.findOne({
+        name: name,
+        department: department,
+        isDelete: false,
+      });
       if (secExist)
         return res.status(409).json({ Message: "Section Exist", secExist });
 
@@ -134,15 +140,22 @@ exports.putSectionUpdate = [
       const { name, department } = req.body;
       const deptExist = await Department.findById(department);
       if (!deptExist)
-        return res.status(400).json({ Message: "Invalid department" });
+        return res.status(400).json({ Message: "Invalid Department" });
 
       const sectionId = req.params.id;
       const section = await Section.findById(sectionId);
       if (!section) return res.status(400).json({ Message: "Invalid section" });
 
+      const secExist = await Section.findOne({
+        name,
+        department,
+        isDelete: false,
+      });
+      if (secExist && name != section.name)
+        return res.status(400).json({ Message: "Section Exist" });
+
       section.name = name;
       section.department = department;
-
       await section.save();
 
       res.status(200).json({ Message: "section update successfully", section });
