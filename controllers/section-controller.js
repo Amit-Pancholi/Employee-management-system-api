@@ -8,7 +8,7 @@ exports.getSectionList = async (req, res, next) => {
       "department",
       "name"
     );
-    res.status(200).json(section);
+    res.status(200).json({section});
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching section",
@@ -25,7 +25,7 @@ exports.getSectionById = async (req, res, next) => {
     }).populate("department", "name");
     if (!section)
       return res.status(404).json({ Message: "section not found or removed" });
-    res.status(200).json(section);
+    res.status(200).json({section});
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching section",
@@ -44,7 +44,7 @@ exports.getSectionByDepartment = async (req, res, next) => {
       return res
         .status(400)
         .json({ Message: "bad request : section not find" });
-    res.status(200).json(section);
+    res.status(200).json({section});
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching section",
@@ -85,7 +85,7 @@ exports.postSectionAdd = [
       if (!deptExist)
         return res.status(400).json({ Message: "Invalid Department" });
 
-      const secExist = await Section.findOne({ name: name });
+      const secExist = await Section.findOne({ name: name,isDelete:false });
       if (secExist)
         return res.status(409).json({ Message: "Section Exist", secExist });
 

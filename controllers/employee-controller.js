@@ -8,7 +8,7 @@ exports.getEmployeeList = async (req, res, next) => {
     const employee = await Employee.find({ isDelete: false })
       .populate("department", "name")
       .populate("section", "name");
-    res.status(200).json(employee);
+    res.status(200).json({employee});
   } catch (error) {
     res.status(500).json({
       message: "Error fetching employees",
@@ -26,10 +26,10 @@ exports.getEmployeeById = async (req, res, next) => {
     })
       .populate("department", "name")
       .populate("section", "name");
-    if (!employee|| employee.length === 0)
+    if (!employee)
       return res.status(404).json({ message: "Employee not found or removed" });
 
-    res.status(200).json(employee);
+    res.status(200).json({employee});
   } catch (error) {
     res.status(500).json({
       message: "Error fetching employees",
@@ -48,7 +48,7 @@ exports.getEmployeeByRole = async (req, res, next) => {
       .populate("section", "name");
     if (employee.length === 0) return res.status(400).json({ Message: "Invalid Role" });
 
-    res.status(200).json(employee);
+    res.status(200).json({employee});
   } catch (error) {
     res.status(500).json({
       message: "Error fetching employees",
@@ -67,7 +67,7 @@ exports.getEmployeeByDepartment = async (req, res, next) => {
       .populate("section", "name");
     if (employee.length === 0)
       return res.status(400).json({ Message: "Invalid Department" });
-    res.status(200).json(employee);
+    res.status(200).json({employee});
   } catch (error) {
     res.status(500).json({
       message: "Error fetching employees",
@@ -87,7 +87,7 @@ exports.getEmployeeBySection = async (req, res, next) => {
       .populate("section", "name");
 
     if (employee.length === 0) return res.status(400).json({ Message: "Invalid section" });
-    res.status(200).json(employee);
+    res.status(200).json({employee});
   } catch (error) {
     res.status(500).json({
       message: "Error fetching employees",

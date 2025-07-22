@@ -4,7 +4,7 @@ const { check, validationResult } = require("express-validator");
 exports.getDepartmentList = async (req, res, next) => {
   try {
     const department = await Department.find({ isDelete: false });
-    res.status(200).json(department);
+    res.status(200).json({department});
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching department",
@@ -24,7 +24,7 @@ exports.getDepartmentById = async (req, res, next) => {
       return res
         .status(404)
         .json({ Message: "Department not found or removed" });
-    res.status(200).json(department);
+    res.status(200).json({department});
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching department",

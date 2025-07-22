@@ -8,7 +8,7 @@ exports.getTaskList = async (req, res, next) => {
       "employee",
       "name"
     );
-    res.status(200).json(task);
+    res.status(200).json({task});
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching task",
@@ -44,7 +44,7 @@ exports.getTaskByEmployee = async (req, res, next) => {
     if (task.length === 0)
       return res.status(400).json({ Message: "Bad request : task not find" });
 
-    res.status(200).json(task);
+    res.status(200).json({task});
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching task",

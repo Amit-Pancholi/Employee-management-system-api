@@ -4,9 +4,9 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "jest --runInBand",
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "test": "jest --runInBand --verbose",
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
