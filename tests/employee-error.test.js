@@ -7,7 +7,7 @@ const { startConnection, endConnection } = require("./connection-for-test");
 beforeAll(startConnection);
 afterAll(endConnection);
 
-describe.skip("Employee error api", () => {
+describe("Employee error api", () => {
   let employee;
   let employee2;
   let departmentId;
@@ -53,7 +53,7 @@ describe.skip("Employee error api", () => {
       department: departmentId,
       section: sectionId,
     });
-    expect(empRes.statusCode).toBe(201);
+    expect(empRes2.statusCode).toBe(201);
 
     employee2 = empRes2.body.employee;
   });
@@ -688,17 +688,22 @@ describe.skip("Employee error api", () => {
     expect(res.body.Message).toBe("invalid data");
   });
   afterAll(async () => {
+    // remove department
     const deptRes = await request(app).delete(
       `${Routes.DEPARTMENTS}/${departmentId}`
     );
     expect(deptRes.statusCode).toBe(200);
-
+    // remove section
     const secRes = await request(app).delete(`${Routes.SECTIONS}/${sectionId}`);
     expect(secRes.statusCode).toBe(200);
-
+    // remove employee
     const empRes = await request(app).delete(
       `${Routes.EMPLOYEES}/${employee._id}`
     );
     expect(empRes.statusCode).toBe(200);
+    const empRes2 = await request(app).delete(
+      `${Routes.EMPLOYEES}/${employee2._id}`
+    );
+    expect(empRes2.statusCode).toBe(200);
   });
 });

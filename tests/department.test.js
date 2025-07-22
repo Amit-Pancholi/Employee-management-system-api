@@ -6,7 +6,7 @@ const { startConnection, endConnection } = require("./connection-for-test");
 beforeAll(startConnection);
 afterAll(endConnection);
 
-describe.skip("Department API", () => {
+describe("Department API", () => {
   let department;
 
   it("should create department", async () => {

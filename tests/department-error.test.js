@@ -7,7 +7,7 @@ const { startConnection, endConnection } = require("./connection-for-test");
 beforeAll(startConnection);
 afterAll(endConnection);
 
-describe.skip("Department error test", () => {
+describe("Department error test", () => {
   let departmentId;
   let nonExistentId = new mongoose.Types.ObjectId();
 

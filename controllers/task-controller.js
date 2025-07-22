@@ -8,7 +8,7 @@ exports.getTaskList = async (req, res, next) => {
       "employee",
       "name"
     );
-    res.status(200).json({task});
+    res.status(200).json({ task });
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching task",
@@ -26,7 +26,7 @@ exports.getTaskById = async (req, res, next) => {
       return res
         .status(400)
         .json({ Message: "Bad request : task not find or removed" });
-    res.status(200).json(task);
+    res.status(200).json({ task });
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching task",
@@ -44,7 +44,7 @@ exports.getTaskByEmployee = async (req, res, next) => {
     if (task.length === 0)
       return res.status(400).json({ Message: "Bad request : task not find" });
 
-    res.status(200).json({task});
+    res.status(200).json({ task });
   } catch (error) {
     res.status(500).json({
       Message: "ERROR fetching task",
@@ -64,7 +64,7 @@ exports.postTaskAdd = [
     .matches(/^[a-zA-Z\s]+$/)
     .withMessage("Task name can only contain letters and spaces"),
   check("status")
-    .isIn(["pending", "in progress", "completed"])
+    .isIn(["", "pending", "in progress", "completed"])
     .withMessage("Please enter status like pending,in progress or completed"),
 
   (req, res, next) => {
@@ -86,6 +86,8 @@ exports.postTaskAdd = [
       const emplExist = await Employee.findById(employee);
       if (!emplExist)
         return res.status(404).json({ Message: "Employee not found" });
+      
+      if (status == "") status = "pending";
 
       const task = new Task({
         taskName,
