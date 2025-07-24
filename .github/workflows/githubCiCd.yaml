@@ -5,7 +5,7 @@ on:
 
 jobs:
   testing:
-    name: 'Testing'
+    name: Testing
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -20,5 +20,5 @@ jobs:
           sudo apt install -y nodejs
           npm install
 
-      - name: 'run test'
+      - name: run test
         run: npm test
