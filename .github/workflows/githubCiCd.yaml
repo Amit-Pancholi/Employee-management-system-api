@@ -20,11 +20,14 @@ jobs:
       - name: Greet to user
         run: echo 'Welcome to testing'
 
-      - name: Testing setup
-        run: |
-          sudo apt update
-          sudo apt install -y nodejs
-          npm install
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'  # or your required version
+
+      - name: Install dependencies
+        run: npm install
+
 
       - name: Create .env file
         run: |
