@@ -1,7 +1,9 @@
 name: First time automation
 
 on: 
-  push
+  push:
+    branches:
+      ghost-branch
 
 jobs:
   testing:
