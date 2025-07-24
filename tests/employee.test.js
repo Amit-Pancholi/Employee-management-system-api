@@ -10,33 +10,58 @@ describe("Employee API", () => {
   let employee;
   let departmentId;
   let sectionId;
+  let token;
+  let userId;
 
   beforeAll(async () => {
-    // for geting department id
-    const deptRes = await request(app).post(Routes.DEPARTMENTS).send({
-      name: "Engineering",
-      description: "Handles product development and technical operations.",
+    const signUpRes = await request(app).post(`${Routes.AUTH}/signup`).send({
+      username: "tester",
+      email: "test@gmail.com",
+      password: "Aq@12345",
+      confirmPassword: "Aq@12345",
     });
+
+    const loginRes = await request(app).post(`${Routes.AUTH}/login`).send({
+      email: "test@gmail.com",
+      password: "Aq@12345",
+    });
+
+    token = loginRes.body.token;
+    userId = loginRes.body.user.id;
+    // for geting department id
+    const deptRes = await request(app)
+      .post(Routes.DEPARTMENTS)
+      .send({
+        name: "Engineering",
+        description: "Handles product development and technical operations.",
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(deptRes.statusCode).toBe(201);
     departmentId = deptRes.body.department._id;
 
     // for getting section id
-    const secRes = await request(app).post(Routes.SECTIONS).send({
-      name: "Frontend Development",
-      department: departmentId,
-    });
+    const secRes = await request(app)
+      .post(Routes.SECTIONS)
+      .send({
+        name: "Frontend Development",
+        department: departmentId,
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(secRes.statusCode).toBe(201);
     sectionId = secRes.body.section._id;
 
     // for create a test employee
-    const empRes = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Ravi Verma",
-      role: "HR Manager",
-      phone: "9012345678",
-      email: "ravi.verma@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const empRes = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Ravi Verma",
+        role: "HR Manager",
+        phone: "9012345678",
+        email: "ravi.verma@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(empRes.statusCode).toBe(201);
 
     employee = empRes.body.employee;
@@ -53,14 +78,18 @@ describe("Employee API", () => {
   });
 
   it("should return employee list", async () => {
-    const res = await request(app).get(Routes.EMPLOYEES);
+    const res = await request(app)
+      .get(Routes.EMPLOYEES)
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.employee.length).toBeGreaterThan(0);
   });
 
   it("should return employee data by id", async () => {
-    const res = await request(app).get(`${Routes.EMPLOYEES}/${employee._id}`);
+    const res = await request(app)
+      .get(`${Routes.EMPLOYEES}/${employee._id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.employee.name).toBe("Ravi Verma");
@@ -72,27 +101,27 @@ describe("Employee API", () => {
   });
 
   it("should return employees by role", async () => {
-    const res = await request(app).get(
-      `${Routes.EMPLOYEES}/role/${employee.role}`
-    );
+    const res = await request(app)
+      .get(`${Routes.EMPLOYEES}/role/${employee.role}`)
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.employee.length).toBeGreaterThan(0);
   });
 
   it("should return employees by department", async () => {
-    const res = await request(app).get(
-      `${Routes.EMPLOYEES}/department/${employee.department}`
-    );
+    const res = await request(app)
+      .get(`${Routes.EMPLOYEES}/department/${employee.department}`)
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.employee.length).toBeGreaterThan(0);
   });
 
   it("should return employee by section", async () => {
-    const res = await request(app).get(
-      `${Routes.EMPLOYEES}/section/${employee.section}`
-    );
+    const res = await request(app)
+      .get(`${Routes.EMPLOYEES}/section/${employee.section}`)
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.employee.length).toBeGreaterThan(0);
@@ -107,7 +136,8 @@ describe("Employee API", () => {
         email: "shyam.verma@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.employee).toEqual(
@@ -120,9 +150,9 @@ describe("Employee API", () => {
     );
   });
   it("should remove employee", async () => {
-    const res = await request(app).delete(
-      `${Routes.EMPLOYEES}/${employee._id}`
-    );
+    const res = await request(app)
+      .delete(`${Routes.EMPLOYEES}/${employee._id}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.Message).toBe("Successfully remove employee");
     expect(res.body.employee).toEqual(
@@ -135,12 +165,19 @@ describe("Employee API", () => {
     );
   });
   afterAll(async () => {
-    const deptRes = await request(app).delete(
-      `${Routes.DEPARTMENTS}/${departmentId}`
-    );
+    const deptRes = await request(app)
+      .delete(`${Routes.DEPARTMENTS}/${departmentId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(deptRes.statusCode).toBe(200);
 
-    const secRes = await request(app).delete(`${Routes.SECTIONS}/${sectionId}`);
+    const secRes = await request(app)
+      .delete(`${Routes.SECTIONS}/${sectionId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(secRes.statusCode).toBe(200);
+    const uesrRemove = await request(app)
+      .delete(`${Routes.AUTH}/${userId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(uesrRemove.statusCode).toBe(200);
   });
 });

@@ -4,4 +4,5 @@ module.exports = {
   DEPARTMENTS: "/api/departments",
   SECTIONS: "/api/sections",
   TASKS: "/api/tasks",
+  AUTH: "/api/auth",
 };

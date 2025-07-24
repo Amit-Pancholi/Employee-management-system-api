@@ -12,43 +12,71 @@ describe("Task API error", () => {
   let departmentId;
   let sectionId;
   let task;
+  let token;
+  let userId;
   let nonExistentId = new mongoose.Types.ObjectId();
   beforeAll(async () => {
-    // for geting department id
-    const deptRes = await request(app).post(Routes.DEPARTMENTS).send({
-      name: "Engineering",
-      description: "Handles product development and technical operations.",
+    const signUpRes = await request(app).post(`${Routes.AUTH}/signup`).send({
+      username: "tester",
+      email: "test@gmail.com",
+      password: "Aq@12345",
+      confirmPassword: "Aq@12345",
     });
+
+    const loginRes = await request(app).post(`${Routes.AUTH}/login`).send({
+      email: "test@gmail.com",
+      password: "Aq@12345",
+    });
+
+    token = loginRes.body.token;
+    userId = loginRes.body.user.id;
+    // for geting department id
+    const deptRes = await request(app)
+      .post(Routes.DEPARTMENTS)
+      .send({
+        name: "Engineering",
+        description: "Handles product development and technical operations.",
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(deptRes.statusCode).toBe(201);
     departmentId = deptRes.body.department._id;
 
     // for getting section id
-    const secRes = await request(app).post(Routes.SECTIONS).send({
-      name: "Frontend Development",
-      department: departmentId,
-    });
+    const secRes = await request(app)
+      .post(Routes.SECTIONS)
+      .send({
+        name: "Frontend Development",
+        department: departmentId,
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(secRes.statusCode).toBe(201);
     sectionId = secRes.body.section._id;
 
     // for create a test employee
-    const empRes = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Ravi Verma",
-      role: "HR Manager",
-      phone: "9012345678",
-      email: "ravi.verma@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const empRes = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Ravi Verma",
+        role: "HR Manager",
+        phone: "9012345678",
+        email: "ravi.verma@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(empRes.statusCode).toBe(201);
 
     employeeId = empRes.body.employee._id;
 
-    const taskRes = await request(app).post(Routes.TASKS).send({
-      taskName: "Finish API Integration",
-      description: "Connect the frontend with the employee management API.",
-      status: "pending", // optional, defaults to "pending"
-      employee: employeeId, // replace with actual ObjectId from test setup
-    });
+    const taskRes = await request(app)
+      .post(Routes.TASKS)
+      .send({
+        taskName: "Finish API Integration",
+        description: "Connect the frontend with the employee management API.",
+        status: "pending", // optional, defaults to "pending"
+        employee: employeeId, // replace with actual ObjectId from test setup
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(taskRes.statusCode).toBe(201);
     task = taskRes.body.task;
   });
@@ -66,12 +94,15 @@ describe("Task API error", () => {
   // ╚══════════════════════════════════════════════════════════════════════════════════╝
 
   it("should return error(creating with empty name)", async () => {
-    const res = await request(app).post(Routes.TASKS).send({
-      taskName: "",
-      description: "Add comprehensive tests for the task routes.",
-      status: "completed",
-      employee: employeeId,
-    });
+    const res = await request(app)
+      .post(Routes.TASKS)
+      .send({
+        taskName: "",
+        description: "Add comprehensive tests for the task routes.",
+        status: "completed",
+        employee: employeeId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -79,12 +110,15 @@ describe("Task API error", () => {
   });
 
   it("should return error(creating with name has less than 2 char)", async () => {
-    const res = await request(app).post(Routes.TASKS).send({
-      taskName: "w",
-      description: "Add comprehensive tests for the task routes.",
-      status: "completed",
-      employee: employeeId,
-    });
+    const res = await request(app)
+      .post(Routes.TASKS)
+      .send({
+        taskName: "w",
+        description: "Add comprehensive tests for the task routes.",
+        status: "completed",
+        employee: employeeId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -94,12 +128,15 @@ describe("Task API error", () => {
   });
 
   it("should return error(creating with name has unexpected char)", async () => {
-    const res = await request(app).post(Routes.TASKS).send({
-      taskName: "write 2386",
-      description: "Add comprehensive tests for the task routes.",
-      status: "completed",
-      employee: employeeId,
-    });
+    const res = await request(app)
+      .post(Routes.TASKS)
+      .send({
+        taskName: "write 2386",
+        description: "Add comprehensive tests for the task routes.",
+        status: "completed",
+        employee: employeeId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -108,12 +145,15 @@ describe("Task API error", () => {
     );
   });
   it("should return error(creating with unexpected status)", async () => {
-    const res = await request(app).post(Routes.TASKS).send({
-      taskName: "write test case",
-      description: "Add comprehensive tests for the task routes.",
-      status: "comp",
-      employee: employeeId,
-    });
+    const res = await request(app)
+      .post(Routes.TASKS)
+      .send({
+        taskName: "write test case",
+        description: "Add comprehensive tests for the task routes.",
+        status: "comp",
+        employee: employeeId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -123,23 +163,29 @@ describe("Task API error", () => {
   });
 
   it("should return error(creating without employee Id)", async () => {
-    const res = await request(app).post(Routes.TASKS).send({
-      taskName: "write test case",
-      description: "Add comprehensive tests for the task routes.",
-      status: "completed",
-    });
+    const res = await request(app)
+      .post(Routes.TASKS)
+      .send({
+        taskName: "write test case",
+        description: "Add comprehensive tests for the task routes.",
+        status: "completed",
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("please send employees");
   });
 
   it("should return error(creating with invalid employee Id)", async () => {
-    const res = await request(app).post(Routes.TASKS).send({
-      taskName: "write test case",
-      description: "Add comprehensive tests for the task routes.",
-      status: "completed",
-      employee: nonExistentId,
-    });
+    const res = await request(app)
+      .post(Routes.TASKS)
+      .send({
+        taskName: "write test case",
+        description: "Add comprehensive tests for the task routes.",
+        status: "completed",
+        employee: nonExistentId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(404);
     expect(res.body.Message).toBe("Employee not found");
@@ -157,18 +203,24 @@ describe("Task API error", () => {
   // ║   ✅ Confirms that the API responds correctly to invalid update requests.             ║
   // ╚═══════════════════════════════════════════════════════════════════════════════=====══=╝
   it("should return error(updating with empty data)", async () => {
-    const res = await request(app).put(`${Routes.TASKS}/${task._id}`).send({});
+    const res = await request(app)
+      .put(`${Routes.TASKS}/${task._id}`)
+      .send({})
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
   });
   it("should return error(updating with empty name)", async () => {
-    const res = await request(app).put(`${Routes.TASKS}/${task._id}`).send({
-      taskName: "",
-      description: "Add comprehensive tests for the task routes.",
-      status: "completed",
-      employee: employeeId,
-    });
+    const res = await request(app)
+      .put(`${Routes.TASKS}/${task._id}`)
+      .send({
+        taskName: "",
+        description: "Add comprehensive tests for the task routes.",
+        status: "completed",
+        employee: employeeId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -176,12 +228,15 @@ describe("Task API error", () => {
   });
 
   it("should return error(updating with name has less than 2 char)", async () => {
-    const res = await request(app).put(`${Routes.TASKS}/${task._id}`).send({
-      taskName: "w",
-      description: "Add comprehensive tests for the task routes.",
-      status: "completed",
-      employee: employeeId,
-    });
+    const res = await request(app)
+      .put(`${Routes.TASKS}/${task._id}`)
+      .send({
+        taskName: "w",
+        description: "Add comprehensive tests for the task routes.",
+        status: "completed",
+        employee: employeeId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -191,12 +246,15 @@ describe("Task API error", () => {
   });
 
   it("should return error(updating with name has unexpected char)", async () => {
-    const res = await request(app).put(`${Routes.TASKS}/${task._id}`).send({
-      taskName: "write 2386",
-      description: "Add comprehensive tests for the task routes.",
-      status: "completed",
-      employee: employeeId,
-    });
+    const res = await request(app)
+      .put(`${Routes.TASKS}/${task._id}`)
+      .send({
+        taskName: "write 2386",
+        description: "Add comprehensive tests for the task routes.",
+        status: "completed",
+        employee: employeeId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -205,12 +263,15 @@ describe("Task API error", () => {
     );
   });
   it("should return error(updating with unexpected status)", async () => {
-    const res = await request(app).put(`${Routes.TASKS}/${task._id}`).send({
-      taskName: "write test case",
-      description: "Add comprehensive tests for the task routes.",
-      status: "comp",
-      employee: employeeId,
-    });
+    const res = await request(app)
+      .put(`${Routes.TASKS}/${task._id}`)
+      .send({
+        taskName: "write test case",
+        description: "Add comprehensive tests for the task routes.",
+        status: "comp",
+        employee: employeeId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -220,23 +281,29 @@ describe("Task API error", () => {
   });
 
   it("should return error(updating without employee Id)", async () => {
-    const res = await request(app).put(`${Routes.TASKS}/${task._id}`).send({
-      taskName: "write test case",
-      description: "Add comprehensive tests for the task routes.",
-      status: "completed",
-    });
+    const res = await request(app)
+      .put(`${Routes.TASKS}/${task._id}`)
+      .send({
+        taskName: "write test case",
+        description: "Add comprehensive tests for the task routes.",
+        status: "completed",
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Invalid Employee");
   });
 
   it("should return error(updating with invalid employee Id)", async () => {
-    const res = await request(app).put(`${Routes.TASKS}/${task._id}`).send({
-      taskName: "write test case",
-      description: "Add comprehensive tests for the task routes.",
-      status: "completed",
-      employee: nonExistentId,
-    });
+    const res = await request(app)
+      .put(`${Routes.TASKS}/${task._id}`)
+      .send({
+        taskName: "write test case",
+        description: "Add comprehensive tests for the task routes.",
+        status: "completed",
+        employee: nonExistentId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Invalid Employee");
@@ -253,44 +320,58 @@ describe("Task API error", () => {
   // ║                                                                                        ║
   // ║   ✅ Confirms the API returns appropriate status codes and error messages.             ║
   // ╚════════════════════════════════════════════════════════════════════════════════════════╝
-it('should return error(get by invalid Id)',async()=>{
-    const res = await request(app).get(`${Routes.TASKS}/${nonExistentId}`)
-    expect(res.statusCode).toBe(400)
+  it("should return error(get by invalid Id)", async () => {
+    const res = await request(app)
+      .get(`${Routes.TASKS}/${nonExistentId}`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Bad request : task not find or removed");
-})
+  });
 
-it("should return error(get by invalid employee Id)", async () => {
-  const res = await request(app).get(`${Routes.TASKS}/employee/${nonExistentId}`);
-  expect(res.statusCode).toBe(400);
-  expect(res.body.Message).toBe("Bad request : task not find");
-});
+  it("should return error(get by invalid employee Id)", async () => {
+    const res = await request(app)
+      .get(`${Routes.TASKS}/employee/${nonExistentId}`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.Message).toBe("Bad request : task not find");
+  });
 
-it("should return error(remove with invalid employee Id)", async () => {
-  const res = await request(app).delete(
-    `${Routes.TASKS}/${nonExistentId}`
-  );
-  expect(res.statusCode).toBe(400);
-  expect(res.body.Message).toBe("invalid task");
-});
+  it("should return error(remove with invalid employee Id)", async () => {
+    const res = await request(app)
+      .delete(`${Routes.TASKS}/${nonExistentId}`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.Message).toBe("invalid task");
+  });
   afterAll(async () => {
     // remove test department
-    const deptRes = await request(app).delete(
-      `${Routes.DEPARTMENTS}/${departmentId}`
-    );
+    const deptRes = await request(app)
+      .delete(`${Routes.DEPARTMENTS}/${departmentId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(deptRes.statusCode).toBe(200);
 
     // remove test section
-    const secRes = await request(app).delete(`${Routes.SECTIONS}/${sectionId}`);
+    const secRes = await request(app)
+      .delete(`${Routes.SECTIONS}/${sectionId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(secRes.statusCode).toBe(200);
 
     // remove employee section
-    const empRes = await request(app).delete(
-      `${Routes.EMPLOYEES}/${employeeId}`
-    );
+    const empRes = await request(app)
+      .delete(`${Routes.EMPLOYEES}/${employeeId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(empRes.statusCode).toBe(200);
 
     // remove test task
-    const taskRes = await request(app).delete(`${Routes.TASKS}/${task._id}`);
+    const taskRes = await request(app)
+      .delete(`${Routes.TASKS}/${task._id}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(taskRes.statusCode).toBe(200);
+
+    const uesrRemove = await request(app)
+      .delete(`${Routes.AUTH}/${userId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(uesrRemove.statusCode).toBe(200);
   });
 });
