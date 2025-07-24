@@ -12,47 +12,75 @@ describe("Employee error api", () => {
   let employee2;
   let departmentId;
   let sectionId;
+  let token;
+  let userId;
   let nonExistentId = new mongoose.Types.ObjectId();
 
   beforeAll(async () => {
-    // for geting department id
-    const deptRes = await request(app).post(Routes.DEPARTMENTS).send({
-      name: "Engineering",
-      description: "Handles product development and technical operations.",
+    const signUpRes = await request(app).post(`${Routes.AUTH}/signup`).send({
+      username: "tester",
+      email: "test@gmail.com",
+      password: "Aq@12345",
+      confirmPassword: "Aq@12345",
     });
+
+    const loginRes = await request(app).post(`${Routes.AUTH}/login`).send({
+      email: "test@gmail.com",
+      password: "Aq@12345",
+    });
+
+    token = loginRes.body.token;
+    userId = loginRes.body.user.id;
+    // for geting department id
+    const deptRes = await request(app)
+      .post(Routes.DEPARTMENTS)
+      .send({
+        name: "Engineering",
+        description: "Handles product development and technical operations.",
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(deptRes.statusCode).toBe(201);
     departmentId = deptRes.body.department._id;
 
     // for getting section id
-    const secRes = await request(app).post(Routes.SECTIONS).send({
-      name: "Frontend Development",
-      department: departmentId,
-    });
+    const secRes = await request(app)
+      .post(Routes.SECTIONS)
+      .send({
+        name: "Frontend Development",
+        department: departmentId,
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(secRes.statusCode).toBe(201);
     sectionId = secRes.body.section._id;
 
     // for create a test employee
-    const empRes = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Ravi Verma",
-      role: "HR Manager",
-      phone: "9012345678",
-      email: "ravi.verma@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const empRes = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Ravi Verma",
+        role: "HR Manager",
+        phone: "9012345678",
+        email: "ravi.verma@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(empRes.statusCode).toBe(201);
 
     employee = empRes.body.employee;
 
     // for create a test employee2
-    const empRes2 = await request(app).post(Routes.EMPLOYEES).send({
-      name: "jojo Verma",
-      role: "Manager",
-      phone: "9013245678",
-      email: "jojoverma@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const empRes2 = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "jojo Verma",
+        role: "Manager",
+        phone: "9013245678",
+        email: "jojoverma@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(empRes2.statusCode).toBe(201);
 
     employee2 = empRes2.body.employee;
@@ -74,41 +102,50 @@ describe("Employee error api", () => {
   // ║     - Reference validation (valid department/section ObjectId)               ║
   // ╚══════════════════════════════════════════════════════════════════════════════╝
   it("should return error(create using exist email)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "shyam Verma",
-      role: "Manager",
-      phone: "4362378928",
-      email: "ravi.verma@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "shyam Verma",
+        role: "Manager",
+        phone: "4362378928",
+        email: "ravi.verma@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(409);
     expect(res.body.Message).toBe("Email exist");
   });
 
   it("should return error(create using exist phone)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "shyam Verma",
-      role: "Manager",
-      phone: "9012345678",
-      email: "shyam3289@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "shyam Verma",
+        role: "Manager",
+        phone: "9012345678",
+        email: "shyam3289@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(409);
     expect(res.body.Message).toBe("Phone exist");
   });
 
   it("should return error(empty name)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      role: "Intern",
-      phone: "9000000001",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        role: "Intern",
+        phone: "9000000001",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -117,14 +154,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(name is less then 2 char)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "t",
-      role: "Intern",
-      phone: "9000000001",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "t",
+        role: "Intern",
+        phone: "9000000001",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -133,14 +173,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(name have unexpeted char)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Ps5",
-      role: "Intern",
-      phone: "9000000001",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Ps5",
+        role: "Intern",
+        phone: "9000000001",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -149,14 +192,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(empty role)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "",
-      phone: "9000000001",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "",
+        phone: "9000000001",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -165,14 +211,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(role less then 2 char)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "I",
-      phone: "9000000001",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "I",
+        phone: "9000000001",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -181,14 +230,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(role have unexpected char)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "In90",
-      phone: "9000000001",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "In90",
+        phone: "9000000001",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -197,14 +249,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(empty phone)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "Intern",
-      phone: "",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "Intern",
+        phone: "",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -213,14 +268,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(phone less then min)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "Intern",
-      phone: "9887",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "Intern",
+        phone: "9887",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -229,14 +287,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(phone more then max)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "Intern",
-      phone: "98877082765",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "Intern",
+        phone: "98877082765",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -245,14 +306,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(phone has unexpected char)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "Intern",
-      phone: "9887(85763",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "Intern",
+        phone: "9887(85763",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -261,14 +325,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(empty email)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "Intern",
-      phone: "9000000001",
-      email: "",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "Intern",
+        phone: "9000000001",
+        email: "",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -277,14 +344,17 @@ describe("Employee error api", () => {
   });
 
   it("should return error(enter valid email)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "Intern",
-      phone: "9000000001",
-      email: "ramlal42342",
-      department: departmentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "Intern",
+        phone: "9000000001",
+        email: "ramlal42342",
+        department: departmentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -293,27 +363,33 @@ describe("Employee error api", () => {
   });
 
   it("should return error(enter valid department)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "Intern",
-      phone: "9000000001",
-      email: "sneha.patel@example.com",
-      department: nonExistentId,
-      section: sectionId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "Intern",
+        phone: "9000000001",
+        email: "sneha.patel@example.com",
+        department: nonExistentId,
+        section: sectionId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Invalid Department");
   });
   it("should return error(enter valid section)", async () => {
-    const res = await request(app).post(Routes.EMPLOYEES).send({
-      name: "Sneha Patel",
-      role: "Intern",
-      phone: "9000000001",
-      email: "sneha.patel@example.com",
-      department: departmentId,
-      section: nonExistentId,
-    });
+    const res = await request(app)
+      .post(Routes.EMPLOYEES)
+      .send({
+        name: "Sneha Patel",
+        role: "Intern",
+        phone: "9000000001",
+        email: "sneha.patel@example.com",
+        department: departmentId,
+        section: nonExistentId,
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Invalid Section");
@@ -336,7 +412,8 @@ describe("Employee error api", () => {
   it("should return error(no update fields sent)", async () => {
     const res = await request(app)
       .put(`${Routes.EMPLOYEES}/${employee._id}`)
-      .send({});
+      .send({})
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
   });
@@ -351,7 +428,8 @@ describe("Employee error api", () => {
         email: employee2.email,
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(409);
     expect(res.body.Message).toBe("Email exist");
@@ -367,7 +445,8 @@ describe("Employee error api", () => {
         email: "shyam3289@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(409);
     expect(res.body.Message).toBe("Phone exist");
@@ -381,7 +460,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -399,7 +479,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -417,7 +498,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -435,7 +517,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -453,7 +536,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -471,7 +555,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -489,7 +574,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -507,7 +593,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -525,7 +612,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -543,7 +631,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -561,7 +650,8 @@ describe("Employee error api", () => {
         email: "",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -579,7 +669,8 @@ describe("Employee error api", () => {
         email: "ramlal42342",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
@@ -597,7 +688,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: nonExistentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Invalid Department");
@@ -612,7 +704,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: nonExistentId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Invalid Section");
@@ -628,7 +721,8 @@ describe("Employee error api", () => {
         email: "sneha.patel@example.com",
         department: departmentId,
         section: sectionId,
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Invalid Employee");
@@ -651,59 +745,71 @@ describe("Employee error api", () => {
   // ╚══════════════════════════════════════════════════════════════════════════════╝
 
   it("should return error(invalid employee access)", async () => {
-    const res = await request(app).get(`${Routes.EMPLOYEES}/${nonExistentId}`);
+    const res = await request(app)
+      .get(`${Routes.EMPLOYEES}/${nonExistentId}`)
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(404);
     expect(res.body.Message).toBe("Employee not found or removed");
   });
 
   it("should return error(invalid role)", async () => {
-    const res = await request(app).get(`${Routes.EMPLOYEES}/role/tester`);
+    const res = await request(app)
+      .get(`${Routes.EMPLOYEES}/role/tester`)
+      .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Invalid Role");
   });
 
   it("should return error(invalid department)", async () => {
-    const res = await request(app).get(
-      `${Routes.EMPLOYEES}/department/${nonExistentId}`
-    );
+    const res = await request(app)
+      .get(`${Routes.EMPLOYEES}/department/${nonExistentId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Invalid Department");
   });
 
   it("should return error(invalid section)", async () => {
-    const res = await request(app).get(
-      `${Routes.EMPLOYEES}/section/${nonExistentId}`
-    );
+    const res = await request(app)
+      .get(`${Routes.EMPLOYEES}/section/${nonExistentId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Invalid section");
   });
 
   it("should return error(remove invalid employee)", async () => {
-    const res = await request(app).delete(
-      `${Routes.EMPLOYEES}/${nonExistentId}`
-    );
+    const res = await request(app)
+      .delete(`${Routes.EMPLOYEES}/${nonExistentId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("invalid data");
   });
   afterAll(async () => {
     // remove department
-    const deptRes = await request(app).delete(
-      `${Routes.DEPARTMENTS}/${departmentId}`
-    );
+    const deptRes = await request(app)
+      .delete(`${Routes.DEPARTMENTS}/${departmentId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(deptRes.statusCode).toBe(200);
     // remove section
-    const secRes = await request(app).delete(`${Routes.SECTIONS}/${sectionId}`);
+    const secRes = await request(app)
+      .delete(`${Routes.SECTIONS}/${sectionId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(secRes.statusCode).toBe(200);
     // remove employee
-    const empRes = await request(app).delete(
-      `${Routes.EMPLOYEES}/${employee._id}`
-    );
+    const empRes = await request(app)
+      .delete(`${Routes.EMPLOYEES}/${employee._id}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(empRes.statusCode).toBe(200);
-    const empRes2 = await request(app).delete(
-      `${Routes.EMPLOYEES}/${employee2._id}`
-    );
+    const empRes2 = await request(app)
+      .delete(`${Routes.EMPLOYEES}/${employee2._id}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(empRes2.statusCode).toBe(200);
+
+    const uesrRemove = await request(app)
+      .delete(`${Routes.AUTH}/${userId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(uesrRemove.statusCode).toBe(200);
   });
 });

@@ -10,20 +10,43 @@ afterAll(endConnection);
 describe("Department error test", () => {
   let departmentId;
   let nonExistentId = new mongoose.Types.ObjectId();
+  let token;
+  let userId
 
   beforeAll(async () => {
-    const res = await request(app).post(Routes.DEPARTMENTS).send({
-      name: "Marketing",
-      description: "Focuses on branding, advertising, and market research.",
+    const signUpRes = await request(app).post(`${Routes.AUTH}/signup`).send({
+      username: "tester",
+      email: "test@gmail.com",
+      password: "Aq@12345",
+      confirmPassword: "Aq@12345",
     });
+
+    const loginRes = await request(app).post(`${Routes.AUTH}/login`).send({
+      email: "test@gmail.com",
+      password: "Aq@12345",
+    });
+
+    token = loginRes.body.token;
+    userId = loginRes.body.user.id
+
+    const res = await request(app)
+      .post(Routes.DEPARTMENTS)
+      .send({
+        name: "Marketing",
+        description: "Focuses on branding, advertising, and market research.",
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(201);
     departmentId = res.body.department._id;
   });
 
   it("should return error(empty name) in creating department", async () => {
-    const res = await request(app).post(Routes.DEPARTMENTS).send({
-      description: "testing section for test name send .",
-    });
+    const res = await request(app)
+      .post(Routes.DEPARTMENTS)
+      .send({
+        description: "testing section for test name send .",
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
     // console.log(res.body.error)
@@ -31,10 +54,13 @@ describe("Department error test", () => {
   });
 
   it("should return error(small name) creating department", async () => {
-    const res = await request(app).post(Routes.DEPARTMENTS).send({
-      name: "t",
-      description: "testing section for test name send .",
-    });
+    const res = await request(app)
+      .post(Routes.DEPARTMENTS)
+      .send({
+        name: "t",
+        description: "testing section for test name send .",
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
     // console.log(res.body.error)
@@ -42,10 +68,13 @@ describe("Department error test", () => {
   });
 
   it("should return error(wrong char in name)", async () => {
-    const res = await request(app).post(Routes.DEPARTMENTS).send({
-      name: "te#",
-      description: "testing section for test name send .",
-    });
+    const res = await request(app)
+      .post(Routes.DEPARTMENTS)
+      .send({
+        name: "te#",
+        description: "testing section for test name send .",
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
     // console.log(res.body.error)
@@ -57,7 +86,8 @@ describe("Department error test", () => {
       .put(`${Routes.DEPARTMENTS}/${departmentId}`)
       .send({
         description: "testing section for test name send .",
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
     // console.log(res.body.error)
@@ -70,7 +100,8 @@ describe("Department error test", () => {
       .send({
         name: "t",
         description: "testing section for test name send .",
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
     // console.log(res.body.error)
@@ -83,30 +114,39 @@ describe("Department error test", () => {
       .send({
         name: "te$",
         description: "testing section for test name send .",
-      });
+      })
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("Error occure in sending data");
     expect(res.body.error[0]).toBe("Name can only contain letters and spaces");
   });
 
   it("should return error(use wrong ID in find)", async () => {
-    const res = await request(app).get(`${Routes.DEPARTMENTS}/${nonExistentId}`);
+    const res = await request(app)
+      .get(`${Routes.DEPARTMENTS}/${nonExistentId}`)
+      .set("Authorization", `Bearer ${token}`);;
     expect(res.statusCode).toBe(404);
     expect(res.body.Message).toBe("Department not found or removed");
-  });
+  })
 
   it("should return error(use wrong ID in remove)", async () => {
-    const res = await request(app).delete(
-      `${Routes.DEPARTMENTS}/${nonExistentId}`
-    );
+    const res = await request(app)
+      .delete(`${Routes.DEPARTMENTS}/${nonExistentId}`)
+      .set("Authorization", `Bearer ${token}`);;
     expect(res.statusCode).toBe(400);
     expect(res.body.Message).toBe("invalid department");
-  });
+  })
 
   afterAll(async () => {
-    const res = await request(app).delete(
-      `${Routes.DEPARTMENTS}/${departmentId}`
-    );
+    const res = await request(app)
+      .delete(`${Routes.DEPARTMENTS}/${departmentId}`)
+      .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(200);
+
+    const uesrRemove = await request(app)
+      .delete(`${Routes.AUTH}/${userId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+      expect(uesrRemove.statusCode).toBe(200)
   });
 });
