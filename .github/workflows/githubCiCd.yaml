@@ -20,5 +20,11 @@ jobs:
           sudo apt install -y nodejs
           npm install
 
-      - name: run test
+      - name: Create .env file
+        run: |
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "PORT=${{ secrets.PORT }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+
+      - name: Run tests
         run: npm test
