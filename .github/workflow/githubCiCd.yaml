@@ -1,0 +1,24 @@
+name: First time automation
+
+on: 
+  push
+
+jobs:
+  testing:
+    name: 'Testing'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Greet to user
+        run: echo 'Welcome to testing'
+
+      - name: Testing setup
+        run: |
+          sudo apt update
+          sudo apt install -y nodejs
+          npm install
+
+      - name: 'run test'
+        run: npm test
